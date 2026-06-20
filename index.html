@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindcraft: Sentient Simulation</title>
+    <style>
+        * { box-sizing: border-box; }
+        
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1a3e 100%);
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 0 0 10px 0;
+            background: linear-gradient(90deg, #00ff88 0%, #00ccff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5em;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #00ff88;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            border: 3px solid #00ff88;
+            background: linear-gradient(180deg, #1a2a1a 0%, #0d1a0d 100%);
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.4), inset 0 0 20px rgba(0, 0, 0, 0.5);
+            display: block;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 4 / 3;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        .sidebar {
+            background: rgba(10, 20, 40, 0.8);
+            border: 2px solid #00ff88;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            color: #00ff88;
+            font-size: 0.85em;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .control-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #1a3a2a;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #00ff88;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.6);
+        }
+
+        .control-group input[type="range"]::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #00ff88;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.6);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            flex: 1;
+            padding: 8px 12px;
+            background: linear-gradient(90deg, #00aa66 0%, #00ff88 100%);
+            color: #0a0e27;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85em;
+            transition: all 0.2s;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.6);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .stats {
+            background: rgba(0, 20, 10, 0.6);
+            border: 1px solid #00664f;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 0.8em;
+            margin-top: 15px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+        }
+
+        .stat-label {
+            color: #00ff88;
+        }
+
+        .stat-value {
+            color: #00ccff;
+            font-weight: bold;
+        }
+
+        .time-display {
+            background: rgba(0, 50, 100, 0.6);
+            border: 2px solid #00ccff;
+            border-radius: 5px;
+            padding: 10px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+
+        .time-display .time {
+            font-size: 1.5em;
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .time-display .phase {
+            font-size: 0.8em;
+            color: #00ccff;
+        }
+
+        .legend {
+            background: rgba(10, 20, 40, 0.8);
+            border: 2px solid #00ff88;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 0.85em;
+        }
+
+        .legend-title {
+            color: #00ff88;
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #00664f;
+            padding-bottom: 5px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #000;
+            flex-shrink: 0;
+        }
+
+        .legend-text {
+            flex: 1;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+
+        .glow-text {
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 MINDCRAFT</h1>
+        <p class="subtitle">Sentient Agent Simulation with Emergent Behavior</p>
+
+        <div class="main-content">
+            <canvas id="world" width="1024" height="768"></canvas>
+
+            <div class="sidebar">
+                <div class="time-display">
+                    <div class="time" id="timeDisplay">DAY</div>
+                    <div class="phase" id="phaseDisplay">Morning</div>
+                </div>
+
+                <div class="control-group">
+                    <label>Simulation Speed</label>
+                    <input type="range" id="speedControl" min="0.5" max="3" step="0.1" value="1">
+                    <span style="font-size: 0.8em; color: #00ccff;" id="speedValue">1.0x</span>
+                </div>
+
+                <div class="button-group">
+                    <button id="pauseBtn">⏸ Pause</button>
+                    <button id="resetBtn">↺ Reset</button>
+                </div>
+
+                <div class="control-group">
+                    <label>Population</label>
+                    <input type="range" id="populationControl" min="5" max="50" step="1" value="20">
+                </div>
+
+                <div class="stats">
+                    <div class="stat-row">
+                        <span class="stat-label">Humans:</span>
+                        <span class="stat-value" id="humanCount">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Villagers:</span>
+                        <span class="stat-value" id="villagerCount">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Zombies:</span>
+                        <span class="stat-value" id="zombieCount">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Livestock:</span>
+                        <span class="stat-value" id="pigCount">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Total Pop:</span>
+                        <span class="stat-value" id="totalCount">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-title">Entity Types & Behaviors</div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #00FFFF;"></div>
+                <div class="legend-text"><strong>Steve</strong> - Intelligent gatherer. Harvests resources, seeks shelter, avoids danger.</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #8B4513;"></div>
+                <div class="legend-text"><strong>Villager</strong> - Social herbivore. Trades, congregates, hides at night.</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #00DD00;"></div>
+                <div class="legend-text"><strong>Zombie</strong> - Nocturnal predator. Hunts intelligently, burns in daylight.</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #FFB6C1;"></div>
+                <div class="legend-text"><strong>Pig</strong> - Passive grazers. Forage, breed, and flee from threats.</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #557a2b;"></div>
+                <div class="legend-text"><strong>Grass</strong> - Common terrain. Regenerates daily.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('world');
+        const ctx = canvas.getContext('2d');
+        const tileSize = 16;
+        const cols = canvas.width / tileSize;
+        const rows = canvas.height / tileSize;
+
+        // Terrain Types
+        const GRASS = 0, WATER = 1, TREE = 2, STONE = 3;
+        const colors = {
+            [GRASS]: '#557a2b',
+            [WATER]: '#2a5a9f',
+            [TREE]: '#1a5a1a',
+            [STONE]: '#6f7f8f'
+        };
+
+        // Global World State
+        let worldMap = [];
+        let entities = [];
+        let time = 0;
+        const DAY_LENGTH = 2400;
+        let isPaused = false;
+        let speedMultiplier = 1;
+        let targetPopulation = 20;
+
+        // Particle System for Visual Effects
+        let particles = [];
+        class Particle {
+            constructor(x, y, vx, vy, color, life) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.color = color;
+                this.life = life;
+                this.maxLife = life;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life--;
+            }
+
+            draw(ctx) {
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.life / this.maxLife;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        // Advanced Terrain Generation with Perlin-like noise
+        function generateWorld() {
+            for (let x = 0; x < cols; x++) {
+                worldMap[x] = [];
+                for (let y = 0; y < rows; y++) {
+                    let rand = Math.random();
+                    // Biome clustering
+                    let nx = x / cols;
+                    let ny = y / rows;
+                    let biomeNoise = Math.sin(nx * 3) * Math.cos(ny * 3) * 0.3 + 0.5;
+                    
+                    if (rand + biomeNoise * 0.3 < 0.08) worldMap[x][y] = WATER;
+                    else if (rand + biomeNoise * 0.2 < 0.20) worldMap[x][y] = TREE;
+                    else if (rand < 0.15) worldMap[x][y] = STONE;
+                    else worldMap[x][y] = GRASS;
+                }
+            }
+        }
+
+        // Enhanced Sentient Agent Class
+        class Agent {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.type = type;
+                this.health = 100;
+                this.hunger = 100;
+                this.energy = 100;
+                this.fear = 0;
+                this.happiness = 50;
+                this.inventory = { wood: 0, stone: 0, food: 0 };
+                this.memory = {
+                    water: null,
+                    trees: [],
+                    danger: null,
+                    allies: [],
+                    lastSafeSpot: null,
+                    explored: []
+                };
+                this.state = 'idle';
+                this.thoughtTimer = 0;
+                this.actionTimer = 0;
+                this.personality = {
+                    bravery: Math.random(),
+                    curiosity: Math.random(),
+                    sociability: Math.random(),
+                    efficiency: Math.random()
+                };
+                this.goal = null;
+                this.previousX = x;
+                this.previousY = y;
+
+                switch(type) {
+                    case 'steve': this.color = '#00FFFF'; this.size = 0.6; break;
+                    case 'villager': this.color = '#8B4513'; this.size = 0.55; break;
+                    case 'zombie': this.color = '#00DD00'; this.size = 0.58; break;
+                    case 'pig': this.color = '#FFB6C1'; this.size = 0.5; break;
+                }
+            }
+
+            // Advanced Perception with Memory
+            sense() {
+                const visionRadius = 8;
+                this.memory.danger = null;
+                this.memory.allies = [];
+
+                // Environmental scanning
+                for (let e of entities) {
+                    if (e === this) continue;
+                    let dx = e.x - this.x;
+                    let dy = e.y - this.y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < visionRadius) {
+                        // Zombie predation
+                        if (this.type === 'zombie' && (e.type === 'steve' || e.type === 'villager' || e.type === 'pig')) {
+                            this.memory.target = e;
+                        }
+                        // Prey awareness
+                        if ((this.type === 'steve' || this.type === 'villager' || this.type === 'pig') && e.type === 'zombie') {
+                            this.memory.danger = e;
+                            this.fear = Math.min(100, this.fear + 15);
+                        }
+                        // Social bonding
+                        if (this.type === e.type && this.type !== 'zombie') {
+                            this.memory.allies.push(e);
+                        }
+                    }
+                }
+
+                // Map memory
+                for(let dx = -visionRadius; dx <= visionRadius; dx++) {
+                    for(let dy = -visionRadius; dy <= visionRadius; dy++) {
+                        let nx = this.x + dx, ny = this.y + dy;
+                        if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
+                            if (worldMap[nx][ny] === TREE) {
+                                if (!this.memory.trees.some(t => t.x === nx && t.y === ny)) {
+                                    this.memory.trees.push({x: nx, y: ny});
+                                }
+                            }
+                            if (worldMap[nx][ny] === WATER) {
+                                this.memory.water = {x: nx, y: ny};
+                            }
+                        }
+                    }
+                }
+
+                // Memory decay
+                this.memory.trees = this.memory.trees.filter(t => 
+                    Math.abs(t.x - this.x) < visionRadius * 1.5 || Math.random() < 0.95
+                );
+            }
+
+            // Sophisticated Decision-Making Engine
+            think() {
+                if (this.health <= 0) return;
+
+                this.thoughtTimer++;
+                this.actionTimer++;
+                let isNight = time > DAY_LENGTH / 2;
+
+                // Stat degradation
+                this.hunger -= 0.05;
+                this.energy -= 0.02;
+                this.fear = Math.max(0, this.fear - 0.5);
+                this.happiness = Math.max(0, Math.min(100, this.happiness - 0.1));
+
+                // Health damage from extreme states
+                if (this.hunger < 20) this.health -= 0.2;
+                if (this.health < 30) this.fear += 2;
+
+                // Zombie AI
+                if (this.type === 'zombie') {
+                    if (!isNight) {
+                        this.health -= 1; // Burn in sunlight
+                        this.state = '🔥 BURNING';
+                    } else if (this.memory.target && this.personality.bravery > 0.3) {
+                        this.state = '🔍 HUNTING';
+                        this.moveTowards(this.memory.target.x, this.memory.target.y);
+                    } else {
+                        this.state = '🚶 ROAMING';
+                        this.wander();
+                    }
+                    return;
+                }
+
+                // Pig AI
+                if (this.type === 'pig') {
+                    if (this.memory.danger) {
+                        this.state = '💨 FLEEING';
+                        this.moveAway(this.memory.danger.x, this.memory.danger.y);
+                    } else {
+                        this.state = '🌾 GRAZING';
+                        this.wander();
+                    }
+                    return;
+                }
+
+                // Steve & Villager: Complex Free Will Decision Tree
+                let utility = {
+                    flee: 0,
+                    seek_food: 0,
+                    gather: 0,
+                    socialize: 0,
+                    explore: 0,
+                    rest: 0
+                };
+
+                // Threat assessment
+                if (this.memory.danger) {
+                    utility.flee = 100 * (1 - this.personality.bravery);
+                }
+
+                // Hunger response
+                if (this.hunger < 40) {
+                    utility.seek_food = (40 - this.hunger) * 2;
+                }
+
+                // Resource gathering (Steve specialized)
+                if (this.type === 'steve' && this.memory.trees.length > 0) {
+                    utility.gather = 50 * this.personality.efficiency;
+                }
+
+                // Social needs
+                if (this.memory.allies.length > 0 && this.personality.sociability > 0.5) {
+                    utility.socialize = this.personality.sociability * 40;
+                }
+
+                // Curiosity-driven exploration
+                if (this.personality.curiosity > 0.6) {
+                    utility.explore = 30;
+                }
+
+                // Energy/rest
+                if (this.energy < 30) {
+                    utility.rest = 80;
+                }
+
+                // Execute highest utility action
+                let maxUtility = Math.max(...Object.values(utility));
+                let action = Object.keys(utility).find(key => utility[key] === maxUtility);
+
+                switch(action) {
+                    case 'flee':
+                        this.state = '💨 FLEEING!';
+                        this.moveAway(this.memory.danger.x, this.memory.danger.y);
+                        this.energy -= 0.5;
+                        break;
+                    case 'seek_food':
+                        this.state = '🍖 HUNTING';
+                        this.wander();
+                        break;
+                    case 'gather':
+                        this.state = '🪵 HARVESTING';
+                        let target = this.memory.trees[0];
+                        if (this.x === target.x && this.y === target.y) {
+                            worldMap[this.x][this.y] = GRASS;
+                            this.inventory.wood++;
+                            this.happiness += 5;
+                            this.memory.trees.shift();
+                            // Particle effect
+                            for (let i = 0; i < 5; i++) {
+                                particles.push(new Particle(
+                                    this.x * tileSize + tileSize/2,
+                                    this.y * tileSize + tileSize/2,
+                                    (Math.random() - 0.5) * 4,
+                                    (Math.random() - 0.5) * 4,
+                                    '#8B4513',
+                                    20
+                                ));
+                            }
+                        } else {
+                            this.moveTowards(target.x, target.y);
+                        }
+                        break;
+                    case 'socialize':
+                        this.state = '💬 SOCIAL';
+                        this.happiness += 2;
+                        let ally = this.memory.allies[0];
+                        if (ally) {
+                            this.moveTowards(ally.x, ally.y);
+                        }
+                        break;
+                    case 'explore':
+                        this.state = '🗺️ EXPLORING';
+                        this.wander();
+                        break;
+                    case 'rest':
+                        this.state = '💤 RESTING';
+                        this.energy = Math.min(100, this.energy + 1);
+                        break;
+                    default:
+                        this.state = '🤔 THINKING';
+                        this.wander();
+                }
+
+                // Night safety behavior
+                if (isNight && this.type === 'villager' && this.memory.danger) {
+                    this.state = '🏘️ HUDDLING';
+                    // Try to stay near allies
+                    if (this.memory.allies.length > 0) {
+                        this.moveTowards(this.memory.allies[0].x, this.memory.allies[0].y);
+                    }
+                }
+            }
+
+            moveTowards(tx, ty) {
+                let dx = Math.sign(tx - this.x);
+                let dy = Math.sign(ty - this.y);
+                this.step(dx, dy);
+            }
+
+            moveAway(tx, ty) {
+                let dx = Math.sign(this.x - tx);
+                let dy = Math.sign(this.y - ty);
+                this.step(dx, dy);
+            }
+
+            wander() {
+                if (Math.random() < 0.7) return;
+                let dirs = [[0,1], [0,-1], [1,0], [-1,0], [1,1], [-1,-1], [1,-1], [-1,1]];
+                let dir = dirs[Math.floor(Math.random() * dirs.length)];
+                this.step(dir[0], dir[1]);
+            }
+
+            step(dx, dy) {
+                let nx = this.x + dx;
+                let ny = this.y + dy;
+                if (nx >= 0 && nx < cols && ny >= 0 && ny < rows && worldMap[nx][ny] !== WATER) {
+                    this.previousX = this.x;
+                    this.previousY = this.y;
+                    this.x = nx;
+                    this.y = ny;
+                }
+            }
+
+            draw() {
+                if (this.health <= 0) return;
+
+                let screenX = this.x * tileSize + tileSize/2;
+                let screenY = this.y * tileSize + tileSize/2;
+
+                // Glow effect based on state
+                let glowIntensity = (Math.sin(time * 0.02) + 1) * 0.5;
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = 0.3 * glowIntensity;
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, tileSize * this.size + 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Main body
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, tileSize * this.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Health indicator ring
+                ctx.strokeStyle = this.health < 30 ? '#FF4444' : '#44FF44';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, tileSize * this.size + 2, 0, Math.PI * 2 * (this.health / 100));
+                ctx.stroke();
+
+                // State indicator
+                if (this.state !== 'idle') {
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 10px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(this.state, screenX, screenY - tileSize * this.size - 8);
+                }
+            }
+        }
+
+        // UI Controls
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            isPaused = !isPaused;
+            document.getElementById('pauseBtn').textContent = isPaused ? '▶ Resume' : '⏸ Pause';
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            init();
+        });
+
+        document.getElementById('speedControl').addEventListener('input', (e) => {
+            speedMultiplier = parseFloat(e.target.value);
+            document.getElementById('speedValue').textContent = speedMultiplier.toFixed(1) + 'x';
+        });
+
+        document.getElementById('populationControl').addEventListener('input', (e) => {
+            targetPopulation = parseInt(e.target.value);
+        });
+
+        // Initialization
+        function init() {
+            worldMap = [];
+            entities = [];
+            particles = [];
+            time = 0;
+            generateWorld();
+
+            // Spawn initial entities
+            const steveCount = Math.floor(targetPopulation * 0.25);
+            const villagerCount = Math.floor(targetPopulation * 0.5);
+            const pigCount = Math.floor(targetPopulation * 0.25);
+
+            for(let i = 0; i < steveCount; i++) {
+                entities.push(new Agent(Math.floor(Math.random()*cols), Math.floor(Math.random()*rows), 'steve'));
+            }
+            for(let i = 0; i < villagerCount; i++) {
+                entities.push(new Agent(Math.floor(Math.random()*cols), Math.floor(Math.random()*rows), 'villager'));
+            }
+            for(let i = 0; i < pigCount; i++) {
+                entities.push(new Agent(Math.floor(Math.random()*cols), Math.floor(Math.random()*rows), 'pig'));
+            }
+
+            loop();
+        }
+
+        function spawnZombies() {
+            const zombieCount = Math.floor(entities.length * 0.15);
+            for(let i = 0; i < zombieCount; i++) {
+                entities.push(new Agent(Math.floor(Math.random()*cols), Math.floor(Math.random()*rows), 'zombie'));
+            }
+        }
+
+        // Main Simulation Loop
+        function loop() {
+            // Time progression
+            if (!isPaused) {
+                time += speedMultiplier;
+            }
+
+            let isNight = time > DAY_LENGTH / 2;
+            let cycleProgress = (time % DAY_LENGTH) / DAY_LENGTH;
+
+            // Night events
+            if (!isPaused && time > 0 && Math.floor(time) % DAY_LENGTH === Math.floor(DAY_LENGTH / 2)) {
+                spawnZombies();
+            }
+
+            // Day reset
+            if (time >= DAY_LENGTH) {
+                time = 0;
+                entities = entities.filter(e => (e.type !== 'zombie' || e.health > 0) && e.health > 0);
+                // Grass regeneration
+                for (let x = 0; x < cols; x++) {
+                    for (let y = 0; y < rows; y++) {
+                        if (worldMap[x][y] === GRASS && Math.random() < 0.02) {
+                            if (Math.random() < 0.05) worldMap[x][y] = TREE;
+                        }
+                    }
+                }
+            }
+
+            // Update time display
+            let phase = '';
+            if (cycleProgress < 0.25) phase = '🌅 Dawn';
+            else if (cycleProgress < 0.5) phase = '☀️ Day';
+            else if (cycleProgress < 0.75) phase = '🌅 Dusk';
+            else phase = '🌙 Night';
+
+            document.getElementById('timeDisplay').textContent = isNight ? 'NIGHT' : 'DAY';
+            document.getElementById('phaseDisplay').textContent = phase;
+
+            // Canvas rendering
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw terrain
+            for (let x = 0; x < cols; x++) {
+                for (let y = 0; y < rows; y++) {
+                    ctx.fillStyle = colors[worldMap[x][y]];
+                    ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                    
+                    // Grid lines for visual clarity
+                    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+                    ctx.lineWidth = 0.5;
+                    ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                }
+            }
+
+            // Night overlay with gradient
+            if (isNight) {
+                ctx.fillStyle = `rgba(10, 20, 60, ${0.4 + 0.1 * Math.sin(time * 0.01)})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            // Process entities
+            if (!isPaused) {
+                if (time % 3 === 0) {
+                    for (let e of entities) {
+                        e.sense();
+                        e.think();
+                    }
+                }
+
+                // Dynamic spawning
+                if (entities.length < targetPopulation * 0.7 && Math.random() < 0.002) {
+                    let types = ['steve', 'villager', 'pig'];
+                    let type = types[Math.floor(Math.random() * types.length)];
+                    entities.push(new Agent(Math.floor(Math.random()*cols), Math.floor(Math.random()*rows), type));
+                }
+            }
+
+            // Draw entities
+            for (let e of entities) {
+                e.draw();
+            }
+
+            // Update particles
+            particles = particles.filter(p => p.life > 0);
+            for (let p of particles) {
+                if (!isPaused) p.update();
+                p.draw(ctx);
+            }
+
+            // Update stats
+            let stats = {
+                steve: 0,
+                villager: 0,
+                zombie: 0,
+                pig: 0
+            };
+            for (let e of entities) {
+                if (e.type === 'steve') stats.steve++;
+                else if (e.type === 'villager') stats.villager++;
+                else if (e.type === 'zombie') stats.zombie++;
+                else if (e.type === 'pig') stats.pig++;
+            }
+
+            document.getElementById('humanCount').textContent = stats.steve;
+            document.getElementById('villagerCount').textContent = stats.villager;
+            document.getElementById('zombieCount').textContent = stats.zombie;
+            document.getElementById('pigCount').textContent = stats.pig;
+            document.getElementById('totalCount').textContent = entities.length;
+
+            requestAnimationFrame(loop);
+        }
+
+        // Start simulation
+        init();
+    </script>
+</body>
+</html>
